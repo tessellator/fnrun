@@ -1,0 +1,6 @@
+github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs=
+github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
+github.com/tessellator/executil v0.1.0 h1:OlTwF1DMUQzUtWuyt0lrPVlE7HCXI1GnEsOLR9zaqm0=
+github.com/tessellator/executil v0.1.0/go.mod h1:Za9Z5f30dSvLrEtLh9b0nqP6N1vPMs3keqxEY7rILtU=
+github.com/tessellator/protoio v0.2.0 h1:eEhQSv2pDjNMKtiTeQ+EHvlHHbfuHW0G9hPG9y1D1l8=
+github.com/tessellator/protoio v0.2.0/go.mod h1:olbOCaJkip9pcn27lueov9wMz7sHxx1xwXGNEAh6g7I=
