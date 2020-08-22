@@ -1,6 +1,7 @@
 package fnrun
 
 import (
+	"context"
 	"io"
 	"os/exec"
 	"time"
@@ -9,9 +10,10 @@ import (
 )
 
 type cmdInvoker struct {
-	cmd    *exec.Cmd
-	stdin  io.WriteCloser
-	stdout io.ReadCloser
+	cmd             *exec.Cmd
+	stdin           io.WriteCloser
+	stdout          io.ReadCloser
+	maxRunnableTime time.Duration
 }
 
 // NewCmdInvoker creates an object that can invoke the provided exec.Cmd.
@@ -34,11 +36,6 @@ func NewCmdInvoker(cmd *exec.Cmd) (Invoker, error) {
 		return nil, err
 	}
 
-	err = cmd.Start()
-	if err != nil {
-		return nil, err
-	}
-
 	p := &cmdInvoker{
 		cmd:    cmd,
 		stdin:  stdin,
@@ -48,23 +45,30 @@ func NewCmdInvoker(cmd *exec.Cmd) (Invoker, error) {
 	return p, nil
 }
 
-func (cf *cmdInvoker) Invoke(input *Input, ctx *ExecutionContext) (*Result, error) {
-	cmd := cf.cmd
+func (cf *cmdInvoker) Invoke(ctx context.Context, input *Input) (*Result, error) {
+	if _, hasTimeout := ctx.Deadline(); !hasTimeout {
+		return nil, ErrMissingTimeout
+	}
 
-	_, err := input.WriteTo(cf.stdin)
+	err := cf.cmd.Start()
 	if err != nil {
-		cmd.Process.Kill()
 		return nil, err
 	}
 
-	_, err = ctx.WriteTo(cf.stdin)
+	_, err = input.WriteTo(cf.stdin)
 	if err != nil {
-		cmd.Process.Kill()
+		cf.cmd.Process.Kill()
 		return nil, err
 	}
 
-	resultChan := make(chan *Result)
-	errChan := make(chan error)
+	_, err = WriteTo(ctx, cf.stdin)
+	if err != nil {
+		cf.cmd.Process.Kill()
+		return nil, err
+	}
+
+	resultChan := make(chan *Result, 1)
+	errChan := make(chan error, 1)
 
 	go func() {
 		result := &Result{}
@@ -79,12 +83,12 @@ func (cf *cmdInvoker) Invoke(input *Input, ctx *ExecutionContext) (*Result, erro
 	select {
 	case response := <-resultChan:
 		return response, nil
+	case <-ctx.Done():
+		cf.cmd.Process.Kill()
+		return nil, ctx.Err()
 	case err = <-errChan:
-		cmd.Process.Kill()
+		cf.cmd.Process.Kill()
 		return nil, err
-	case <-time.After(ctx.MaxRunnableTime):
-		cmd.Process.Kill()
-		return nil, ErrExecutionTimeout
 	}
 }
 

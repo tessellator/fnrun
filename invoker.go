@@ -1,13 +1,27 @@
 package fnrun
 
 import (
+	"context"
 	"errors"
 	"io"
-	"time"
 
 	tspb "github.com/golang/protobuf/ptypes"
 	"github.com/tessellator/fnrun/fnrun/protobufs"
 	"github.com/tessellator/protoio"
+)
+
+// ErrMissingTimeout exists to signal that an code is attempting to call an
+// invoker without specifying a timeout.
+// fnrun assumes that invokers have an associated timeout.
+var ErrMissingTimeout = errors.New("Expected a context with a timeout")
+
+// This typing helps avoid key collisions in context.Context; see
+// https://blog.golang.org/context#TOC_3.2.
+
+type ctxKey int
+
+const (
+	ctxEnvKey ctxKey = iota
 )
 
 // Invoker represents something that can be called with an input and context
@@ -24,7 +38,7 @@ type Invoker interface {
 	//
 	// If an error is returned, the instance cannot be guaranteed to be invokable
 	// again, subject to implementation.
-	Invoke(*Input, *ExecutionContext) (*Result, error)
+	Invoke(context.Context, *Input) (*Result, error)
 }
 
 // InvokerFactory represents an object that can create instances of Invokers.
@@ -32,20 +46,34 @@ type InvokerFactory interface {
 	NewInvoker() (Invoker, error)
 }
 
-// ExecutionContext contains contextual information for an invocation.
-type ExecutionContext struct {
-	MaxRunnableTime time.Duration
-	Env             map[string]string
+// WithEnv annotates the context with any environment variables the process
+// should receive.
+func WithEnv(ctx context.Context, env map[string]string) context.Context {
+	return context.WithValue(ctx, ctxEnvKey, env)
+}
+
+// Env retrieves the environment variables placed on the Invoker's context.
+// The second argument is false if there are no environment variables
+// associated with the context.
+func Env(ctx context.Context) (map[string]string, bool) {
+	env, hasEnv := ctx.Value(ctxEnvKey).(map[string]string)
+	return env, hasEnv
 }
 
 // WriteTo writes the ExecutionContext to the specified writer.
-func (ctx *ExecutionContext) WriteTo(w io.Writer) (int64, error) {
+func WriteTo(ctx context.Context, w io.Writer) (int64, error) {
 	envVars := []*protobufs.EnvironmentVariable{}
-	for k, v := range ctx.Env {
-		envVars = append(envVars, &protobufs.EnvironmentVariable{Name: k, Value: v})
+	env, hasEnv := Env(ctx)
+	if hasEnv {
+		for k, v := range env {
+			envVars = append(envVars, &protobufs.EnvironmentVariable{Name: k, Value: v})
+		}
 	}
 
-	stopTime := time.Now().Add(ctx.MaxRunnableTime)
+	stopTime, hasTimeout := ctx.Deadline()
+	if !hasTimeout {
+		return 0, ErrMissingTimeout
+	}
 	stopTimeProto, err := tspb.TimestampProto(stopTime)
 	if err != nil {
 		return 0, err
@@ -115,7 +143,3 @@ func ReadFrom(r io.Reader, result *Result) error {
 
 	return nil
 }
-
-// ErrExecutionTimeout is an error that indicates the allowable execution time
-// was exceeded.
-var ErrExecutionTimeout = errors.New("execution time exceeded")

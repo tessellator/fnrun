@@ -1,6 +1,7 @@
 package fnrun
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -12,6 +13,7 @@ func TestNewInvokerPool(t *testing.T) {
 			MaxInvokerCount: 5,
 			InvokerFactory:  &invokerFactoryThatCannotCreateInvoker{},
 			MaxWaitDuration: 5 * time.Millisecond,
+			MaxRunnableTime: 0,
 		}
 		pool, err := NewInvokerPool(config)
 
@@ -29,6 +31,7 @@ func TestNewInvokerPool(t *testing.T) {
 			MaxInvokerCount: 5,
 			InvokerFactory:  &simpleInvokerFactory{},
 			MaxWaitDuration: 5 * time.Millisecond,
+			MaxRunnableTime: 0,
 		}
 		pool, err := NewInvokerPool(config)
 
@@ -48,6 +51,7 @@ func TestInvokerPool_Invoke_funcErr(t *testing.T) {
 		MaxInvokerCount: 5,
 		InvokerFactory:  &errInvokerFactory{},
 		MaxWaitDuration: 5 * time.Millisecond,
+		MaxRunnableTime: 0,
 	}
 	pool, err := NewInvokerPool(config)
 
@@ -55,10 +59,9 @@ func TestInvokerPool_Invoke_funcErr(t *testing.T) {
 		t.Fatalf("Creating invoker pool returned err: %+v", err)
 	}
 
-	ctx := ExecutionContext{}
 	input := Input{}
 
-	result, err := pool.Invoke(&input, &ctx)
+	result, err := pool.Invoke(context.Background(), &input)
 
 	if err != ErrFake {
 		t.Errorf("Expected fake error, but got: %+v", err)
@@ -80,6 +83,7 @@ func TestInvokerPool_Invoke_timeout(t *testing.T) {
 		MaxInvokerCount: 0,
 		InvokerFactory:  &simpleInvokerFactory{},
 		MaxWaitDuration: 5 * time.Millisecond,
+		MaxRunnableTime: 0,
 	}
 	pool, err := NewInvokerPool(config)
 
@@ -87,10 +91,9 @@ func TestInvokerPool_Invoke_timeout(t *testing.T) {
 		t.Fatalf("Creating invoker pool returned err: %+v", err)
 	}
 
-	ctx := ExecutionContext{}
 	input := Input{}
 
-	result, err := pool.Invoke(&input, &ctx)
+	result, err := pool.Invoke(context.Background(), &input)
 
 	if err != ErrAvailabilityTimeout {
 		t.Errorf("Expected availability timeout error, but got: %+v", err)
@@ -106,6 +109,7 @@ func TestInvokerPool_Invoke_success(t *testing.T) {
 		MaxInvokerCount: 5,
 		InvokerFactory:  &simpleInvokerFactory{},
 		MaxWaitDuration: 5 * time.Millisecond,
+		MaxRunnableTime: 0,
 	}
 	pool, err := NewInvokerPool(config)
 
@@ -113,10 +117,9 @@ func TestInvokerPool_Invoke_success(t *testing.T) {
 		t.Fatalf("Creating invoker pool returned err: %+v", err)
 	}
 
-	ctx := ExecutionContext{}
 	input := Input{}
 
-	result, err := pool.Invoke(&input, &ctx)
+	result, err := pool.Invoke(context.Background(), &input)
 
 	length := len(pool.invokerChan)
 	if length != 5 {
@@ -156,7 +159,7 @@ func (factory *simpleInvokerFactory) NewInvoker() (Invoker, error) {
 
 type simpleInvoker struct{}
 
-func (sf *simpleInvoker) Invoke(input *Input, ctx *ExecutionContext) (*Result, error) {
+func (sf *simpleInvoker) Invoke(ctx context.Context, input *Input) (*Result, error) {
 	return &Result{Data: []byte("some data")}, nil
 }
 
@@ -171,6 +174,6 @@ func (factory *errInvokerFactory) NewInvoker() (Invoker, error) {
 
 type errInvoker struct{}
 
-func (ef *errInvoker) Invoke(*Input, *ExecutionContext) (*Result, error) {
+func (ef *errInvoker) Invoke(context.Context, *Input) (*Result, error) {
 	return nil, ErrFake
 }
