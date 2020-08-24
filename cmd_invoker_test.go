@@ -11,20 +11,14 @@ import (
 	protoio "github.com/tessellator/protoio"
 )
 
-func TestCmdInvoker_Invoke_commmandDoesNotExist(t *testing.T) {
+func TestNewCmdInvoker(t *testing.T) {
 	t.Run("with an executable that does not exist", func(t *testing.T) {
 		cmd := exec.Command("does_not_exist")
-		invoker, err := NewCmdInvoker(cmd)
 
-		if err != nil {
-			t.Fatalf("NewCmdInvoker() returned error: %+v", err)
-		}
-
-		input := Input{}
-		_, err = invoker.Invoke(context.Background(), &input)
+		_, err := NewCmdInvoker(cmd)
 
 		if err == nil {
-			t.Errorf("Invoke() did not return error")
+			t.Errorf("NewCmdInvoker() did not return error")
 		}
 	})
 }

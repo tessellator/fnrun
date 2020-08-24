@@ -36,6 +36,11 @@ func NewCmdInvoker(cmd *exec.Cmd) (Invoker, error) {
 		return nil, err
 	}
 
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
 	p := &cmdInvoker{
 		cmd:    cmd,
 		stdin:  stdin,
@@ -50,12 +55,7 @@ func (cf *cmdInvoker) Invoke(ctx context.Context, input *Input) (*Result, error)
 		return nil, ErrMissingTimeout
 	}
 
-	err := cf.cmd.Start()
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = input.WriteTo(cf.stdin)
+	_, err := input.WriteTo(cf.stdin)
 	if err != nil {
 		cf.cmd.Process.Kill()
 		return nil, err
