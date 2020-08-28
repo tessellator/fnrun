@@ -1,6 +1,7 @@
 package fnrun
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"testing"
@@ -31,9 +32,8 @@ func TestCmdInvoker_Invoke_crash(t *testing.T) {
 		t.Fatalf("NewCmdInvoker() returned error: %+v", err)
 	}
 
-	ctx := ExecutionContext{}
 	input := Input{}
-	result, err := invoker.Invoke(&input, &ctx)
+	result, err := invoker.Invoke(context.Background(), &input)
 
 	if err == nil {
 		t.Error("Invoke(): did not receive error but expected to")
@@ -53,17 +53,15 @@ func TestCmdInvoker_Invoke_runTooLong(t *testing.T) {
 		t.Fatalf("NewCmdInvoker() returned error: %+v", err)
 	}
 
-	ctx := ExecutionContext{
-		MaxRunnableTime: 5 * time.Millisecond,
-		Env:             make(map[string]string),
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+	defer cancel()
 
 	input := Input{Data: []byte("some data")}
 
-	_, err = invoker.Invoke(&input, &ctx)
+	_, err = invoker.Invoke(ctx, &input)
 
-	if err != ErrExecutionTimeout {
-		t.Errorf("Expected execution timeout error but got: %+v", err)
+	if err != context.DeadlineExceeded {
+		t.Errorf("Expected deadline exceeded error but got: %+v", err)
 	}
 }
 
@@ -72,14 +70,12 @@ func TestCmdInvoker_Invoke_invalidReturn(t *testing.T) {
 	cmd.Env = append(os.Environ(), "GO_RUNNING_SUBPROCESS=1")
 	invoker, err := NewCmdInvoker(cmd)
 
-	ctx := ExecutionContext{
-		MaxRunnableTime: 5 * time.Millisecond,
-		Env:             make(map[string]string),
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+	defer cancel()
 
 	input := Input{Data: []byte("some data")}
 
-	result, err := invoker.Invoke(&input, &ctx)
+	result, err := invoker.Invoke(ctx, &input)
 
 	if err == nil {
 		t.Errorf("Expected Invoke() to return an error, but it did not")
@@ -95,14 +91,12 @@ func TestCmdInvoker_Invoke_closeNoReturn(t *testing.T) {
 	cmd.Env = append(os.Environ(), "GO_RUNNING_SUBPROCESS=1")
 	invoker, err := NewCmdInvoker(cmd)
 
-	ctx := ExecutionContext{
-		MaxRunnableTime: 5 * time.Millisecond,
-		Env:             make(map[string]string),
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+	defer cancel()
 
 	input := Input{Data: []byte("some data")}
 
-	result, err := invoker.Invoke(&input, &ctx)
+	result, err := invoker.Invoke(ctx, &input)
 
 	if err == nil {
 		t.Errorf("Expected Invoke() to return an error, but it did not")
@@ -123,13 +117,11 @@ func TestCmdInvoker_Invoke_validReturn(t *testing.T) {
 		t.Fatalf("NewCmdInvoker() returned error: %+v", err)
 	}
 
-	ctx := ExecutionContext{
-		MaxRunnableTime: 30 * time.Hour,
-		Env:             make(map[string]string),
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Hour)
+	defer cancel()
 
 	input := Input{Data: []byte("world")}
-	result, err := invoker.Invoke(&input, &ctx)
+	result, err := invoker.Invoke(ctx, &input)
 
 	if err != nil {
 		t.Errorf("Invoke() returned err: %+v", err)

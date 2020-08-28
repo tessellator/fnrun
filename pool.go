@@ -1,6 +1,7 @@
 package fnrun
 
 import (
+	"context"
 	"errors"
 	"time"
 )
@@ -22,6 +23,7 @@ type InvokerPoolConfig struct {
 	MaxInvokerCount int
 	InvokerFactory  InvokerFactory
 	MaxWaitDuration time.Duration
+	MaxRunnableTime time.Duration
 }
 
 // NewInvokerPool creats a new InvokerPool with the provided configuration.
@@ -49,13 +51,15 @@ func NewInvokerPool(config InvokerPoolConfig) (*InvokerPool, error) {
 // If a worker Invoker is not available within the MaxWaitDuration of the pool
 // configuration, an ErrAvailabilityTimeout error is returned from this
 // function.
-func (pool *InvokerPool) Invoke(input *Input, ctx *ExecutionContext) (*Result, error) {
+func (pool *InvokerPool) Invoke(ctx context.Context, input *Input) (*Result, error) {
 	// TODO Keep track of how many invoker instances we have (that are in use or
 	// available; that haven't failed and been unreplaced). Once that number hits
 	// zero, we should return an appropriate error
 	select {
 	case invoker := <-pool.invokerChan:
-		result, err := invoker.Invoke(input, ctx)
+		childCtx, cancel := context.WithTimeout(ctx, pool.config.MaxRunnableTime)
+		defer cancel()
+		result, err := invoker.Invoke(childCtx, input)
 		if err != nil {
 			newInvoker, factoryErr := pool.config.InvokerFactory.NewInvoker()
 			if factoryErr != nil {
