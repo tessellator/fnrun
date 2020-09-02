@@ -3,6 +3,7 @@ package fnrun
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"testing"
 	"time"
 
@@ -14,15 +15,14 @@ func TestExecutionContext_WriteTo(t *testing.T) {
 	vars := make(map[string]string)
 	vars["hello"] = "world"
 
-	ctx := ExecutionContext{
-		MaxRunnableTime: 30 * time.Second,
-		Env:             vars,
-	}
+	ctx := WithEnv(context.Background(), vars)
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 
-	_, err := ctx.WriteTo(w)
+	_, err := WriteTo(ctx, w)
 	if err != nil {
 		t.Fatalf("WriteTo() got err: %+v", err)
 	}
