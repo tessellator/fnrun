@@ -14,6 +14,8 @@ github.com/tessellator/executil v0.1.0 h1:OlTwF1DMUQzUtWuyt0lrPVlE7HCXI1GnEsOLR9
 github.com/tessellator/executil v0.1.0/go.mod h1:Za9Z5f30dSvLrEtLh9b0nqP6N1vPMs3keqxEY7rILtU=
 github.com/tessellator/protoio v0.2.0 h1:eEhQSv2pDjNMKtiTeQ+EHvlHHbfuHW0G9hPG9y1D1l8=
 github.com/tessellator/protoio v0.2.0/go.mod h1:olbOCaJkip9pcn27lueov9wMz7sHxx1xwXGNEAh6g7I=
+github.com/tessellator/protoio v0.3.0 h1:h066Lox64MomqGENWoudqb37mXXEubHuoDNZFPxbM6U=
+github.com/tessellator/protoio v0.3.0/go.mod h1:g648RaPuc6ZtM6E9WsXxGn44paoxcmm8qseHQakB0Ck=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
 google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=

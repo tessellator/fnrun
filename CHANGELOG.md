@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Updated protoio dependency to latest release (0.3.0).
 - Updated protobuf dependency to latest release (1.4.2).
 - **Breaking** Update API use to context.Context (@jimberlage).
 
