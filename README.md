@@ -1,7 +1,8 @@
 # fnrun
 
-[![GoDoc](https://godoc.org/github.com/tessellator/fnrun?status.svg)](https://godoc.org/github.com/tessellator/fnrun)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/tessellator/fnrun)](https://pkg.go.dev/github.com/tessellator/fnrun)
 [![Go Report Card](https://goreportcard.com/badge/tessellator/fnrun)](https://goreportcard.com/report/tessellator/fnrun)
+[![codecov](https://codecov.io/gh/tessellator/fnrun/branch/master/graph/badge.svg)](https://codecov.io/gh/tessellator/fnrun)
 [![Releases](https://img.shields.io/github/v/tag/tessellator/fnrun?include_prereleases&sort=semver)](https://github.com/tessellator/fnrun/releases)
 [![LICENSE](https://img.shields.io/github/license/tessellator/fnrun.svg)](https://github.com/tessellator/fnrun/blob/master/LICENSE)
 
