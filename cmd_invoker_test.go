@@ -69,6 +69,9 @@ func TestCmdInvoker_Invoke_invalidReturn(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=Test_WriteEventSubprocess")
 	cmd.Env = append(os.Environ(), "GO_RUNNING_SUBPROCESS=1")
 	invoker, err := NewCmdInvoker(cmd)
+	if err != nil {
+		t.Fatalf("NewCmdInvoker() unexpectedly returned error: %+v", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
 	defer cancel()
@@ -90,6 +93,9 @@ func TestCmdInvoker_Invoke_closeNoReturn(t *testing.T) {
 	cmd := exec.Command(os.Args[0], "-test.run=Test_WriteNoOutput")
 	cmd.Env = append(os.Environ(), "GO_RUNNING_SUBPROCESS=1")
 	invoker, err := NewCmdInvoker(cmd)
+	if err != nil {
+		t.Fatalf("NewCmdInvoker() unexpectedly returned error: %+v", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
 	defer cancel()

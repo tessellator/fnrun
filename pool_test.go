@@ -121,6 +121,10 @@ func TestInvokerPool_Invoke_success(t *testing.T) {
 
 	result, err := pool.Invoke(context.Background(), &input)
 
+	if err != nil {
+		t.Fatalf("Invoke() unexpectedly returned err: %+v", err)
+	}
+
 	length := len(pool.invokerChan)
 	if length != 5 {
 		t.Errorf("Expected invokerChan to have 5 elements, but has: %d", length)
