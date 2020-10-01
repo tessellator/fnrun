@@ -141,6 +141,46 @@ func TestCmdInvoker_Invoke_validReturn(t *testing.T) {
 	}
 }
 
+func TestNewCmdInvokerFactory(t *testing.T) {
+	cmd := exec.Command(os.Args[0], "-test.run=Test_GreetingSubprocess")
+	cmd.Env = append(os.Environ(), "GO_RUNNING_SUBPROCESS=1")
+
+	factory := NewCmdInvokerFactory(cmd)
+
+	invoker, err := factory.NewInvoker()
+
+	if err != nil {
+		t.Fatalf("NewInvoker() returned error: %+v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Hour)
+	defer cancel()
+
+	input := Input{Data: []byte("world")}
+	result, err := invoker.Invoke(ctx, &input)
+
+	if err != nil {
+		t.Errorf("Invoke() returned err: %+v", err)
+	}
+
+	want := "Hello, world!"
+	got := string(result.Data)
+
+	if want != got {
+		t.Errorf("Did not read expected result: got %s; want %s", got, want)
+	}
+
+	anotherInvoker, err := factory.NewInvoker()
+
+	if err != nil {
+		t.Fatalf("NewInvoker() returned error: %+v", err)
+	}
+
+	if invoker == anotherInvoker {
+		t.Errorf("NewInvoker() did not return a distinct instance")
+	}
+}
+
 // -----------------------------------------------------------------------------
 // Following are various subprocesses used for testing. Each is named according
 // to its behavior.
