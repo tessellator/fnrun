@@ -2,7 +2,7 @@ name: Run tests and coverage report
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 jobs:
